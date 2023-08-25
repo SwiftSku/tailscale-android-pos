@@ -41,6 +41,8 @@ import (
 	_ "image/png"
 )
 
+const skuVersion = "0.6.1"
+
 type UI struct {
 	theme *material.Theme
 	store *stateStore
@@ -52,6 +54,9 @@ type UI struct {
 	search  widget.Editor
 
 	exitLAN widget.Bool
+
+	// goToPos is the button for going to the POS screen.
+	goToPos widget.Clickable
 
 	// webSigin is the button for the web-based sign-in flow.
 	webSignin widget.Clickable
@@ -330,6 +335,7 @@ func (ui *UI) setMenuShown(v bool) {
 
 func (ui *UI) layout(gtx layout.Context, sysIns system.Insets, state *clientState) []UIEvent {
 	// "Get started".
+	ui.intro.show = false
 	if ui.intro.show {
 		if ui.intro.start.Clicked() {
 			ui.store.WriteBool(keyShowIntro, false)
@@ -393,6 +399,10 @@ func (ui *UI) layout(gtx layout.Context, sysIns system.Insets, state *clientStat
 	if ui.webSignin.Clicked() {
 		ui.signinType = webSignin
 		events = append(events, WebAuthEvent{})
+	}
+
+	if ui.goToPos.Clicked() {
+		events = append(events, GoToPosEvent{})
 	}
 
 	if ui.loginServerSave.Clicked() {
@@ -519,6 +529,8 @@ func (ui *UI) layout(gtx layout.Context, sysIns system.Insets, state *clientStat
 				if netmap == nil || state.backend.State < ipn.Stopped {
 					return D{}
 				}
+				// return D{}
+				// return ui.layoutPOSButton(gtx, sysIns)
 				for ui.self.Clicked() {
 					events = append(events, CopyEvent{Text: localAddr})
 					ui.showCopied(gtx, localAddr)
@@ -530,7 +542,9 @@ func (ui *UI) layout(gtx layout.Context, sysIns system.Insets, state *clientStat
 				if state.backend.State < ipn.Stopped {
 					return D{}
 				}
-				return ui.layoutSearchbar(gtx, sysIns)
+				return ui.layoutPOSButton(gtx, sysIns)
+				return D{}
+				// return ui.layoutSearchbar(gtx, sysIns)
 			case 4:
 				if !needsLogin {
 					return D{}
@@ -543,6 +557,7 @@ func (ui *UI) layout(gtx layout.Context, sysIns system.Insets, state *clientStat
 				if needsLogin {
 					return D{}
 				}
+				return D{}
 				pidx := idx - numHeaders
 				p := &state.Peers[pidx]
 				if p.Peer == nil {
@@ -759,42 +774,42 @@ func (ui *UI) layoutSignIn(gtx layout.Context, state *BackendState) layout.Dimen
 		}
 
 		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx,
-			layout.Rigid(func(gtx C) D {
-				if !googleSignInEnabled() {
-					return D{}
-				}
-				return layout.Inset{Bottom: unit.Dp(16)}.Layout(gtx, func(gtx C) D {
-					signin := material.ButtonLayout(ui.theme, &ui.googleSignin)
-					signin.Background = color.NRGBA{} // transparent
+			// layout.Rigid(func(gtx C) D {
+			// 	if !googleSignInEnabled() {
+			// 		return D{}
+			// 	}
+			// 	return layout.Inset{Bottom: unit.Dp(16)}.Layout(gtx, func(gtx C) D {
+			// 		signin := material.ButtonLayout(ui.theme, &ui.googleSignin)
+			// 		signin.Background = color.NRGBA{} // transparent
 
-					return ui.withLoader(gtx, ui.signinType == googleSignin, func(gtx C) D {
-						return border.Layout(gtx, func(gtx C) D {
-							if ui.signinType != noSignin {
-								gtx.Queue = nil
-							}
-							return signin.Layout(gtx, func(gtx C) D {
-								gtx.Constraints.Max.Y = gtx.Dp(unit.Dp(48))
-								return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Right: unit.Dp(4)}.Layout(gtx, func(gtx C) D {
-											return drawImage(gtx, ui.icons.google, unit.Dp(16))
-										})
-									}),
-									layout.Rigid(func(gtx C) D {
-										return layout.Inset{Top: unit.Dp(10), Bottom: unit.Dp(10)}.Layout(gtx, func(gtx C) D {
-											l := material.Body2(ui.theme, "Sign in with Google")
-											l.Color = rgb(textColor)
-											return l.Layout(gtx)
-										})
-									}),
-								)
-							})
-						})
-					})
-				})
-			}),
+			// 		return ui.withLoader(gtx, ui.signinType == googleSignin, func(gtx C) D {
+			// 			return border.Layout(gtx, func(gtx C) D {
+			// 				if ui.signinType != noSignin {
+			// 					gtx.Queue = nil
+			// 				}
+			// 				return signin.Layout(gtx, func(gtx C) D {
+			// 					gtx.Constraints.Max.Y = gtx.Dp(unit.Dp(48))
+			// 					return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+			// 						layout.Rigid(func(gtx C) D {
+			// 							return layout.Inset{Right: unit.Dp(4)}.Layout(gtx, func(gtx C) D {
+			// 								return drawImage(gtx, ui.icons.google, unit.Dp(16))
+			// 							})
+			// 						}),
+			// 						layout.Rigid(func(gtx C) D {
+			// 							return layout.Inset{Top: unit.Dp(10), Bottom: unit.Dp(10)}.Layout(gtx, func(gtx C) D {
+			// 								l := material.Body2(ui.theme, "Sign in with Google")
+			// 								l.Color = rgb(textColor)
+			// 								return l.Layout(gtx)
+			// 							})
+			// 						}),
+			// 					)
+			// 				})
+			// 			})
+			// 		})
+			// 	})
+			// }),
 			layout.Rigid(func(gtx C) D {
-				label := "Sign in with other"
+				label := "Sign in with QR code"
 				if !googleSignInEnabled() {
 					label = "Sign in"
 				}
@@ -1116,16 +1131,21 @@ func (ui *UI) layoutAboutDialog(gtx layout.Context, sysIns system.Insets) {
 					}),
 					layout.Rigid(func(gtx C) D {
 						return layout.UniformInset(unit.Dp(16)).Layout(gtx, func(gtx C) D {
-							return material.Body1(ui.theme, "version "+version.Short()).Layout(gtx)
+							return material.Body1(ui.theme, "Tailscale version "+version.Short()).Layout(gtx)
 						})
 					}),
 					layout.Rigid(func(gtx C) D {
-						return material.Clickable(gtx, &ui.ossLicenses, func(gtx C) D {
-							return layout.UniformInset(unit.Dp(16)).Layout(gtx, func(gtx C) D {
-								return material.Body1(ui.theme, "Open Source Licenses").Layout(gtx)
-							})
+						return layout.UniformInset(unit.Dp(16)).Layout(gtx, func(gtx C) D {
+							return material.Body1(ui.theme, "Swiftsku version "+skuVersion).Layout(gtx)
 						})
 					}),
+					// layout.Rigid(func(gtx C) D {
+					// 	return material.Clickable(gtx, &ui.ossLicenses, func(gtx C) D {
+					// 		return layout.UniformInset(unit.Dp(16)).Layout(gtx, func(gtx C) D {
+					// 			return material.Body1(ui.theme, "Open Source Licenses").Layout(gtx)
+					// 		})
+					// 	})
+					// }),
 				)
 			})
 		})
@@ -1216,24 +1236,25 @@ func (ui *UI) layoutMenu(gtx layout.Context, sysIns system.Insets, expiry time.T
 				})
 			}
 			items := []menuItem{
-				{title: "Copy my IP address", btn: &menu.copy},
+				// {title: "Copy my IP address", btn: &menu.copy},
 			}
 			if showExits {
 				items = append(items, menuItem{title: "Use exit node...", btn: &menu.exits})
 			}
 			items = append(items,
-				menuItem{title: "Bug report", btn: &menu.bug},
+				// menuItem{title: "Bug report", btn: &menu.bug},
 				menuItem{title: "Reauthenticate", btn: &menu.reauth},
 				menuItem{title: "Log out", btn: &menu.logout},
 			)
 
-			var title string
-			if ui.runningExit {
-				title = "Stop running exit node"
-			} else {
-				title = "Run exit node"
-			}
-			items = append(items, menuItem{title: title, btn: &menu.beExit})
+			//? To run an exit node
+			// var title string
+			// if ui.runningExit {
+			// 	title = "Stop running exit node"
+			// } else {
+			// 	title = "Run exit node"
+			// }
+			// items = append(items, menuItem{title: title, btn: &menu.beExit})
 
 			items = append(items, menuItem{title: "About", btn: &menu.about})
 
@@ -1345,6 +1366,23 @@ func (ui *UI) layoutSection(gtx layout.Context, sysIns system.Insets, title stri
 			l.Color = rgb(0x6f797d)
 			return l.Layout(gtx)
 		})
+	})
+}
+
+// layoutPOSButton lays a button to go to the POS screen (Button like Sign in with QR code "line 803")
+func (ui *UI) layoutPOSButton(gtx layout.Context, sysIns system.Insets) layout.Dimensions {
+	return layout.Inset{
+		Top:    unit.Dp(30),
+		Left:   unit.Dp(100),
+		Right:  unit.Dp(100),
+		Bottom: sysIns.Bottom,
+	}.Layout(gtx, func(gtx C) D {
+		start := material.Button(ui.theme, &ui.goToPos, "Go to POS")
+		start.Inset = layout.UniformInset(unit.Dp(16))
+		start.CornerRadius = unit.Dp(16)
+		start.Background = rgb(0x496495)
+		start.TextSize = unit.Sp(18)
+		return start.Layout(gtx)
 	})
 }
 

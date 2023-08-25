@@ -164,6 +164,14 @@ type ConnectEvent struct {
 	Enable bool
 }
 
+type SetAuthKeyEvent struct {
+	AuthKey string
+}
+
+type SetHostnameEvent struct {
+	hostname string
+}
+
 type CopyEvent struct {
 	Text string
 }
@@ -192,6 +200,7 @@ type (
 	ReauthEvent       struct{}
 	BugEvent          struct{}
 	WebAuthEvent      struct{}
+	GoToPosEvent			struct{}
 	GoogleAuthEvent   struct{}
 	LogoutEvent       struct{}
 	OSSLicensesEvent  struct{}
@@ -243,6 +252,18 @@ func main() {
 	go func() {
 		if err := a.runUI(); err != nil {
 			fatalErr(err)
+		}
+	}()
+	//start the vpn service
+	go func() {
+		//sleep 10 second to wait the vpn service start
+		time.Sleep(10 * time.Second)
+		needsLogin := state.backend.State == ipn.NeedsLogin
+		//if login, start the vpn service
+		log.Println("----needsLogin:", needsLogin)
+		if !needsLogin {
+			requestBackend(ConnectEvent{Enable: true})
+			log.Println("----starting the vpn service after 10 sec-----")
 		}
 	}()
 	app.Main()
@@ -357,10 +378,12 @@ func (a *App) runBackend() error {
 			}
 			first := state.Prefs == nil
 			if first {
-				state.Prefs = ipn.NewPrefs()
-				state.Prefs.Hostname = a.hostname()
-				go b.backend.SetPrefs(state.Prefs)
-				a.setPrefs(state.Prefs)
+				//?Dont update the prefs at the first time, it will reset the device name
+				// state.Prefs = ipn.NewPrefs()
+				// state.Prefs.Hostname = a.hostname()
+				// ui.ShowMessage("Welcome to Tailscale!")
+				// go b.backend.SetPrefs(state.Prefs)
+				// a.setPrefs(state.Prefs)
 			}
 			if s := n.State; s != nil {
 				oldState := state.State
@@ -441,6 +464,34 @@ func (a *App) runBackend() error {
 					go b.backend.StartLoginInteractive()
 					signingIn = true
 				}
+			case SetAuthKeyEvent:
+				authKey := e.AuthKey
+				if b.backend.State() <= ipn.Stopped {
+					log.Printf("using authkey; state=%v", b.backend.State())
+					go func() {
+						prefs := ipn.NewPrefs()
+						prefs.WantRunning = true
+						err := b.backend.Start(ipn.Options{
+							AuthKey:     authKey,
+							UpdatePrefs: prefs,
+						})
+						log.Printf("authkey: Start error = %v", err)
+						if err != nil {
+							fatalErr(err)
+						} else {
+							b.backend.StartLoginInteractive()
+						}
+					}()
+				} else {
+					log.Printf("ignoring authkey in state=%v", b.backend.State())
+				}
+			case SetHostnameEvent:
+				hostname := e.hostname
+				if hostname != "" {
+					state.Prefs.Hostname = hostname
+					go b.backend.SetPrefs(state.Prefs)
+					a.setPrefs(state.Prefs)
+				}
 			case SetLoginServerEvent:
 				state.Prefs.ControlURL = e.URL
 				b.backend.SetPrefs(state.Prefs)
@@ -498,17 +549,6 @@ func (a *App) runBackend() error {
 						return nil // even on error. see big TODO above.
 					})
 				})
-				log.Printf("onConnect: rebind required")
-				// TODO(catzkorn): When we start the android application
-				// we bind sockets before we have access to the VpnService.protect()
-				// function which is needed to avoid routing loops. When we activate
-				// the service we get access to the protect, but do not retrospectively
-				// protect the sockets already opened, which breaks connectivity.
-				// As a temporary fix, we rebind and protect the magicsock.Conn on connect
-				// which restores connectivity.
-				// See https://github.com/tailscale/corp/issues/13814
-				b.backend.DebugRebind()
-
 				service = s
 				return nil
 			})
@@ -694,6 +734,23 @@ func (s *BackendState) updateExitNodes() {
 	}
 }
 
+// Go to POS application
+func (a *App) goToPosApp() {
+	packageName := "com.swiftsku.swiftpos"
+	activityName := "com.swiftsku.swiftpos.MainActivity"
+
+	err := jni.Do(a.jvm, func(env *jni.Env) error {
+		cls := jni.GetObjectClass(env, a.appCtx)
+		m := jni.GetMethodID(env, cls, "goToPosApp", "(Ljava/lang/String;Ljava/lang/String;)V")
+		jpackageName := jni.JavaString(env, packageName)
+		jactivityName := jni.JavaString(env, activityName)
+		return jni.CallVoidMethod(env, a.appCtx, m, jni.Value(jpackageName), jni.Value(jactivityName))		
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
 // hostname builds a hostname from android.os.Build fields, in place of a
 // useless os.Hostname().
 func (a *App) hostname() string {
@@ -860,6 +917,10 @@ func (a *App) setURL(url string) {
 	a.browseURLs <- url
 }
 
+var state = new(clientState)
+// var w *app.Window //only for testing
+// var ui *UI
+
 func (a *App) runUI() error {
 	w := app.NewWindow()
 	ui, err := newUI(a.store)
@@ -867,7 +928,7 @@ func (a *App) runUI() error {
 		return err
 	}
 	var ops op.Ops
-	state := new(clientState)
+	// state := new(clientState)
 	var (
 		// activity is the most recent Android Activity reference as reported
 		// by Gio ViewEvents.
@@ -906,6 +967,17 @@ func (a *App) runUI() error {
 					w.Invalidate()
 				}
 			}
+		case authKey := <-onSetAuthKeyForNextConnect:
+			ui.ShowMessage("got authkey")
+			requestBackend(SetAuthKeyEvent{AuthKey: authKey})
+		case hostname := <-onSetHostname:
+			if hostname == "" {
+				ui.ShowMessage("Hostname can't be empty !")
+				break
+			}
+			ui.ShowMessage("Got new hostname:" + hostname)
+			requestBackend(SetHostnameEvent{hostname: hostname})
+
 		case p := <-a.prefs:
 			ui.enabled.Value = p.WantRunning
 			ui.runningExit = p.AdvertisesExitNode()
@@ -913,11 +985,12 @@ func (a *App) runUI() error {
 			w.Invalidate()
 		case url := <-a.browseURLs:
 			ui.signinType = noSignin
-			if a.isTV() {
-				ui.ShowQRCode(url)
-			} else {
-				state.browseURL = url
-			}
+			ui.ShowQRCode(url)
+			// if a.isTV() {
+			// 	ui.ShowQRCode(url)
+			// } else {
+			// 	state.browseURL = url
+			// }
 			w.Invalidate()
 			a.updateState(activity, state)
 		case newState := <-a.netStates:
@@ -1150,6 +1223,8 @@ func (a *App) processUIEvents(w *app.Window, events []UIEvent, act jni.Object, s
 			requestBackend(e)
 		case ExitAllowLANEvent:
 			requestBackend(e)
+		case GoToPosEvent:
+			a.goToPosApp()
 		case WebAuthEvent:
 			a.store.WriteString(loginMethodPrefKey, loginMethodWeb)
 			requestBackend(e)
