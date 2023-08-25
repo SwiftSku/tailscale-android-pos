@@ -68,6 +68,8 @@ import androidx.security.crypto.MasterKey;
 
 import androidx.browser.customtabs.CustomTabsIntent;
 
+import android.content.ComponentName;
+
 import org.gioui.Gio;
 
 public class App extends Application {
@@ -191,6 +193,14 @@ public class App extends Application {
 		return getModelName();
 	}
 
+  void goToPosApp(String packageName, String activityName) {
+  // adb shell am start -n "com.example.intenttest/com.example.intenttest.MainActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
+    Intent intent = new Intent();
+    intent.setComponent(new ComponentName(packageName, activityName));
+    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    startActivity(intent);
+  }
+
 	String getModelName() {
 		String manu = Build.MANUFACTURER;
 		String model = Build.MODEL;
@@ -210,7 +220,7 @@ public class App extends Application {
 	// get user defined nickname from Settings
 	// returns null if not available
 	private String getUserConfiguredDeviceName() {
-		String nameFromSystemDevice = Settings.Secure.getString(getContentResolver(), "device_name");
+				String nameFromSystemDevice = Settings.Secure.getString(getContentResolver(), "device_name");
 		if (!isEmpty(nameFromSystemDevice)) return nameFromSystemDevice;
 		return null;
 	}

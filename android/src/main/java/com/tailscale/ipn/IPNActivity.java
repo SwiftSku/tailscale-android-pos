@@ -15,6 +15,11 @@ import android.net.Uri;
 import android.content.pm.PackageManager;
 
 import java.util.List;
+
+import android.os.Handler;
+import android.content.ComponentName;
+import android.widget.Toast;
+
 import java.util.ArrayList;
 
 import org.gioui.GioView;
@@ -28,8 +33,22 @@ public final class IPNActivity extends Activity {
 		super.onCreate(state);
 		view = new GioView(this);
 		setContentView(view);
+    //to minimize the app from opened from boot
+    boolean fromBoot = getIntent().getBooleanExtra("BOOT", false);
+    if (fromBoot) {
+      //minimize the app
+      moveTaskToBack(true);
+    }
 		handleIntent();
+    // new  Handler().postDelayed(this::launchOtherApp, 1000);
 	}
+
+  public void launchOtherApp() {
+  // adb shell am start -n "com.example.intenttest/com.example.intenttest.MainActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
+    Intent intent = new Intent(Intent.ACTION_MAIN);
+    intent.setComponent(new ComponentName("com.swiftsku.swiftpos", "com.swiftsku.swiftpos.MainActivity"));
+    startActivity(intent);
+  }
 
 	@Override public void onNewIntent(Intent i) {
 		setIntent(i);
@@ -127,7 +146,8 @@ public final class IPNActivity extends Activity {
 	}
 
 	@Override public void onBackPressed() {
-		if (!view.backPressed())
+		launchOtherApp();
+    if (!view.backPressed())
 			super.onBackPressed();
 	}
 }
