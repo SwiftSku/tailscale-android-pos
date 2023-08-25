@@ -11,7 +11,7 @@ Note: Use `sudo` in front make commands if it fails
 
 ### Build
 ```sudo make apk```
-```sudo make tailscale-debug.apk``
+```sudo make tailscale-debug.apk```
 
 ### Install
 ```make install```
