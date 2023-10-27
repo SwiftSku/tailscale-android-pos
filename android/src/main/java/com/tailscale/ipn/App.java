@@ -126,12 +126,14 @@ public class App extends Application {
 	}
 
 	public void startVPN() {
+    sendBroadcast(new Intent("com.tailscale.ipn.VPN_START"));
 		Intent intent = new Intent(this, IPNService.class);
 		intent.setAction(IPNService.ACTION_CONNECT);
 		startService(intent);
 	}
 
 	public void stopVPN() {
+    sendBroadcast(new Intent("com.tailscale.ipn.VPN_STOP"));
 		Intent intent = new Intent(this, IPNService.class);
 		intent.setAction(IPNService.ACTION_DISCONNECT);
 		startService(intent);
