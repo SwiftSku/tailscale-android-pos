@@ -41,7 +41,7 @@ import (
 	_ "image/png"
 )
 
-const skuVersion = "0.6.1"
+const skuVersion = "0.6.2"
 
 type UI struct {
 	theme *material.Theme
