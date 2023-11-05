@@ -89,6 +89,8 @@ public class App extends Application {
 	public DnsConfig dns = new DnsConfig(this);
 	public DnsConfig getDnsConfigObj() { return this.dns; }
 
+  public GetStatusRec getStatusRec = new GetStatusRec();
+
 	@Override public void onCreate() {
 		super.onCreate();
 		// Load and initialize the Go library.
@@ -99,6 +101,7 @@ public class App extends Application {
 		createNotificationChannel(STATUS_CHANNEL_ID, "VPN Status", NotificationManagerCompat.IMPORTANCE_LOW);
 		createNotificationChannel(FILE_CHANNEL_ID, "File transfers", NotificationManagerCompat.IMPORTANCE_DEFAULT);
 
+    registerReceiver(getStatusRec, new IntentFilter("com.tailscale.ipn.GET_VPN_STATUS"));
 	}
 
 	private void registerNetworkCallback() {
@@ -126,18 +129,31 @@ public class App extends Application {
 	}
 
 	public void startVPN() {
-    sendBroadcast(new Intent("com.tailscale.ipn.VPN_START"));
+    broadcastVPNStatus(true);
 		Intent intent = new Intent(this, IPNService.class);
 		intent.setAction(IPNService.ACTION_CONNECT);
 		startService(intent);
 	}
 
 	public void stopVPN() {
-    sendBroadcast(new Intent("com.tailscale.ipn.VPN_STOP"));
+    broadcastVPNStatus(false);
 		Intent intent = new Intent(this, IPNService.class);
 		intent.setAction(IPNService.ACTION_DISCONNECT);
 		startService(intent);
 	}
+
+  private boolean vpnStatus = false;
+
+  public void getVPNStatus() {
+    broadcastVPNStatus(vpnStatus);
+  }
+
+  public void broadcastVPNStatus(boolean status) {
+    vpnStatus = status;
+    Intent stateIntent = new Intent("com.tailscale.ipn.VPN_STATUS");
+    stateIntent.putExtra("status", status);
+    sendBroadcast(stateIntent);
+  }
 
 	// encryptToPref a byte array of data using the Jetpack Security
 	// library and writes it to a global encrypted preference store.
@@ -417,4 +433,14 @@ public class App extends Application {
 		UiModeManager mm = (UiModeManager)getSystemService(UI_MODE_SERVICE);
 		return mm.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
 	}
+}
+
+class GetStatusRec extends BroadcastReceiver {
+  @Override
+  public void onReceive(Context context, Intent intent) {
+    if (intent.getAction().equals("com.tailscale.ipn.GET_VPN_STATUS")) {
+      App app = (App) context.getApplicationContext();
+      app.getVPNStatus();
+    }
+  }
 }
