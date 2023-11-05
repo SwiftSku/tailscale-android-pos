@@ -41,7 +41,7 @@ import (
 	_ "image/png"
 )
 
-const skuVersion = "0.6.2"
+const swiftskuVersion = "0.6.3"
 
 type UI struct {
 	theme *material.Theme
@@ -1136,7 +1136,7 @@ func (ui *UI) layoutAboutDialog(gtx layout.Context, sysIns system.Insets) {
 					}),
 					layout.Rigid(func(gtx C) D {
 						return layout.UniformInset(unit.Dp(16)).Layout(gtx, func(gtx C) D {
-							return material.Body1(ui.theme, "Swiftsku version "+skuVersion).Layout(gtx)
+							return material.Body1(ui.theme, "Swiftsku version "+swiftskuVersion).Layout(gtx)
 						})
 					}),
 					// layout.Rigid(func(gtx C) D {
