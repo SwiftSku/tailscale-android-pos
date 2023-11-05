@@ -76,4 +76,5 @@ adb shell am broadcast -a com.tailscale.ipn.HOSTNAME -n com.tailscale.ipn/.IPNRe
 
 ## Broadcasts
 ### VPN state
-To receive VPN state changes, register a broadcast receiver for `com.tailscale.ipn.VPN_START` and `com.tailscale.ipn.VPN_STOP` actions.
+To receive VPN state changes, register a broadcast receiver for `com.tailscale.ipn.VPN_STATUS` and key `status` in the intent extras.  
+To trigger a status broadcast, send a broadcast with action `com.tailscale.ipn.GET_VPN_STATUS`
