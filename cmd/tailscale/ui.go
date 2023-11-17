@@ -41,7 +41,7 @@ import (
 	_ "image/png"
 )
 
-const swiftskuVersion = "0.6.3"
+const swiftskuVersion = "0.6.4"
 
 type UI struct {
 	theme *material.Theme
