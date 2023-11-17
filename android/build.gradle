@@ -43,7 +43,7 @@ android {
 			// The play flavor contains all features and is for the Play Store.
 		}
 	}
-    namespace 'com.tailscale.ipn'
+    namespace 'com.swiftsku.swiftscale'
 }
 
 dependencies {

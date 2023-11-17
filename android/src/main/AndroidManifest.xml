@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"  package="com.swiftsku.swiftscale">
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -14,7 +14,7 @@
 	<uses-feature android:name="android.software.leanback" android:required="false" />
 	<uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 
-	<application android:label="Tailscale" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"
+	<application android:label="Swiftsku" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"
                      android:banner="@drawable/tv_banner"
                      android:name=".App" android:allowBackup="false">
 		<activity android:name="IPNActivity"
@@ -59,10 +59,10 @@
 			android:exported="true"
 			>
 			<intent-filter>
-				<action android:name="com.tailscale.ipn.CONNECT_VPN" />
-				<action android:name="com.tailscale.ipn.DISCONNECT_VPN" />
-				<action android:name="com.tailscale.ipn.AUTHKEY" />
-        <action android:name="com.tailscale.ipn.HOSTNAME" />
+				<action android:name="com.swiftsku.swiftscale.CONNECT_VPN" />
+				<action android:name="com.swiftsku.swiftscale.DISCONNECT_VPN" />
+				<action android:name="com.swiftsku.swiftscale.AUTHKEY" />
+        <action android:name="com.swiftsku.swiftscale.HOSTNAME" />
 			</intent-filter>
 		</receiver>
 		<service android:name=".IPNService"

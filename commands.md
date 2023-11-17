@@ -18,22 +18,22 @@ Note: Use `sudo` in front make commands if it fails
 ```adb install -r tailscale-debug.apk```
 
 ### Uninstall
-```adb uninstall com.tailscale.ipn```
+```adb uninstall com.swiftsku.swiftscale```
 
 ## Intents
 ### Run
-```adb shell am start -n com.tailscale.ipn/com.tailscale.ipn.IPNActivity```
+```adb shell am start -n com.swiftsku.swiftscale/com.swiftsku.swiftscale.IPNActivity```
 
 ### Start VPN
-```adb shell am broadcast -a com.tailscale.ipn.CONNECT_VPN -n com.tailscale.ipn/.IPNReceiver```
+```adb shell am broadcast -a com.swiftsku.swiftscale.CONNECT_VPN -n com.swiftsku.swiftscale/.IPNReceiver```
 
 ### Stop VPN
-```adb shell am broadcast -a com.tailscale.ipn.DISCONNECT_VPN -n com.tailscale.ipn/.IPNReceiver```
+```adb shell am broadcast -a com.swiftsku.swiftscale.DISCONNECT_VPN -n com.swiftsku.swiftscale/.IPNReceiver```
 
 ### Start VPN with authkey
-```adb shell am broadcast -a com.tailscale.ipn.AUTHKEY -n com.tailscale.ipn/.IPNReceiver --es authkey "key"```
+```adb shell am broadcast -a com.swiftsku.swiftscale.AUTHKEY -n com.swiftsku.swiftscale/.IPNReceiver --es authkey "key"```
 
 
 ### Node rename
-```adb shell am broadcast -a com.tailscale.ipn.HOSTNAME -n com.tailscale.ipn/.IPNReceiver --es hostname "new-name"```
+```adb shell am broadcast -a com.swiftsku.swiftscale.HOSTNAME -n com.swiftsku.swiftscale/.IPNReceiver --es hostname "new-name"```
 

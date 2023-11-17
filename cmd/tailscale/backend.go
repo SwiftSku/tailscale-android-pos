@@ -391,7 +391,7 @@ func (b *backend) SetupLogs(logDir string, logID logid.PrivateID, logf logger.Lo
 func (b *backend) logDNSConfigMechanisms() {
 	err := jni.Do(b.jvm, func(env *jni.Env) error {
 		cls := jni.GetObjectClass(env, b.appCtx)
-		m := jni.GetMethodID(env, cls, "getDnsConfigObj", "()Lcom/tailscale/ipn/DnsConfig;")
+		m := jni.GetMethodID(env, cls, "getDnsConfigObj", "()Lcom/swiftsku/swiftscale/DnsConfig;")
 		dns, err := jni.CallObjectMethod(env, b.appCtx, m)
 		if err != nil {
 			return fmt.Errorf("getDnsConfigObj JNI: %v", err)
@@ -423,7 +423,7 @@ func (b *backend) getPlatformDNSConfig() string {
 	var baseConfig string
 	err := jni.Do(b.jvm, func(env *jni.Env) error {
 		cls := jni.GetObjectClass(env, b.appCtx)
-		m := jni.GetMethodID(env, cls, "getDnsConfigObj", "()Lcom/tailscale/ipn/DnsConfig;")
+		m := jni.GetMethodID(env, cls, "getDnsConfigObj", "()Lcom/swiftsku/swiftscale/DnsConfig;")
 		dns, err := jni.CallObjectMethod(env, b.appCtx, m)
 		if err != nil {
 			return fmt.Errorf("getDnsConfigObj: %v", err)

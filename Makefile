@@ -4,7 +4,7 @@
 
 DEBUG_APK=tailscale-debug.apk
 RELEASE_AAB=tailscale-release.aab
-APPID=com.tailscale.ipn
+APPID=com.swiftsku.swiftscale
 AAR=android/libs/ipn.aar
 KEYSTORE=tailscale.jks
 KEYSTORE_ALIAS=tailscale
@@ -145,7 +145,7 @@ $(DEBUG_APK): $(AAR)
 apk: $(DEBUG_APK)
 
 run: install
-	adb shell am start -n com.tailscale.ipn/com.tailscale.ipn.IPNActivity
+	adb shell am start -n com.swiftsku.swiftscale/com.swiftsku.swiftscale.IPNActivity
 
 # tailscale-fdroid.apk builds a non-Google Play SDK, without the Google bits.
 # This is effectively what the F-Droid build definition produces.

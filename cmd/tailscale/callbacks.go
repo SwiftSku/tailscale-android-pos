@@ -61,13 +61,13 @@ const (
 // resultOK is Android's Activity.RESULT_OK.
 const resultOK = -1
 
-//export Java_com_tailscale_ipn_App_onVPNPrepared
-func Java_com_tailscale_ipn_App_onVPNPrepared(env *C.JNIEnv, class C.jclass) {
+//export Java_com_swiftsku_swiftscale_App_onVPNPrepared
+func Java_com_swiftsku_swiftscale_App_onVPNPrepared(env *C.JNIEnv, class C.jclass) {
 	notifyVPNPrepared()
 }
 
-//export Java_com_tailscale_ipn_App_onWriteStorageGranted
-func Java_com_tailscale_ipn_App_onWriteStorageGranted(env *C.JNIEnv, class C.jclass) {
+//export Java_com_swiftsku_swiftscale_App_onWriteStorageGranted
+func Java_com_swiftsku_swiftscale_App_onWriteStorageGranted(env *C.JNIEnv, class C.jclass) {
 	select {
 	case onWriteStorageGranted <- struct{}{}:
 	default:
@@ -95,35 +95,35 @@ func notifyVPNClosed() {
 	}
 }
 
-//export Java_com_tailscale_ipn_IPNService_connect
-func Java_com_tailscale_ipn_IPNService_connect(env *C.JNIEnv, this C.jobject) {
+//export Java_com_swiftsku_swiftscale_IPNService_connect
+func Java_com_swiftsku_swiftscale_IPNService_connect(env *C.JNIEnv, this C.jobject) {
 	jenv := (*jni.Env)(unsafe.Pointer(env))
 	onConnect <- jni.NewGlobalRef(jenv, jni.Object(this))
 }
 
-//export Java_com_tailscale_ipn_IPNService_directConnect
-func Java_com_tailscale_ipn_IPNService_directConnect(env *C.JNIEnv, this C.jobject) {
+//export Java_com_swiftsku_swiftscale_IPNService_directConnect
+func Java_com_swiftsku_swiftscale_IPNService_directConnect(env *C.JNIEnv, this C.jobject) {
 	requestBackend(ConnectEvent{Enable: true})
 }
 
-//export Java_com_tailscale_ipn_IPNService_disconnect
-func Java_com_tailscale_ipn_IPNService_disconnect(env *C.JNIEnv, this C.jobject) {
+//export Java_com_swiftsku_swiftscale_IPNService_disconnect
+func Java_com_swiftsku_swiftscale_IPNService_disconnect(env *C.JNIEnv, this C.jobject) {
 	jenv := (*jni.Env)(unsafe.Pointer(env))
 	onDisconnect <- jni.NewGlobalRef(jenv, jni.Object(this))
 }
 
-//export Java_com_tailscale_ipn_StartVPNWorker_connect
-func Java_com_tailscale_ipn_StartVPNWorker_connect(env *C.JNIEnv, this C.jobject) {
+//export Java_com_swiftsku_swiftscale_StartVPNWorker_connect
+func Java_com_swiftsku_swiftscale_StartVPNWorker_connect(env *C.JNIEnv, this C.jobject) {
 	requestBackend(ConnectEvent{Enable: true})
 }
 
-//export Java_com_tailscale_ipn_StopVPNWorker_disconnect
-func Java_com_tailscale_ipn_StopVPNWorker_disconnect(env *C.JNIEnv, this C.jobject) {
+//export Java_com_swiftsku_swiftscale_StopVPNWorker_disconnect
+func Java_com_swiftsku_swiftscale_StopVPNWorker_disconnect(env *C.JNIEnv, this C.jobject) {
 	requestBackend(ConnectEvent{Enable: false})
 }
 
-//export Java_com_tailscale_ipn_App_onConnectivityChanged
-func Java_com_tailscale_ipn_App_onConnectivityChanged(env *C.JNIEnv, cls C.jclass, connected C.jboolean) {
+//export Java_com_swiftsku_swiftscale_App_onConnectivityChanged
+func Java_com_swiftsku_swiftscale_App_onConnectivityChanged(env *C.JNIEnv, cls C.jclass, connected C.jboolean) {
 	select {
 	case <-onConnectivityChange:
 	default:
@@ -131,13 +131,13 @@ func Java_com_tailscale_ipn_App_onConnectivityChanged(env *C.JNIEnv, cls C.jclas
 	onConnectivityChange <- connected == C.JNI_TRUE
 }
 
-//export Java_com_tailscale_ipn_QuickToggleService_onTileClick
-func Java_com_tailscale_ipn_QuickToggleService_onTileClick(env *C.JNIEnv, cls C.jclass) {
+//export Java_com_swiftsku_swiftscale_QuickToggleService_onTileClick
+func Java_com_swiftsku_swiftscale_QuickToggleService_onTileClick(env *C.JNIEnv, cls C.jclass) {
 	requestBackend(ToggleEvent{})
 }
 
-//export Java_com_tailscale_ipn_Peer_onActivityResult0
-func Java_com_tailscale_ipn_Peer_onActivityResult0(env *C.JNIEnv, cls C.jclass, act C.jobject, reqCode, resCode C.jint) {
+//export Java_com_swiftsku_swiftscale_Peer_onActivityResult0
+func Java_com_swiftsku_swiftscale_Peer_onActivityResult0(env *C.JNIEnv, cls C.jclass, act C.jobject, reqCode, resCode C.jint) {
 	switch reqCode {
 	case requestSignin:
 		if resCode != resultOK {
@@ -164,8 +164,8 @@ func Java_com_tailscale_ipn_Peer_onActivityResult0(env *C.JNIEnv, cls C.jclass, 
 	}
 }
 
-//export Java_com_tailscale_ipn_App_onShareIntent
-func Java_com_tailscale_ipn_App_onShareIntent(env *C.JNIEnv, cls C.jclass, nfiles C.jint, jtypes C.jintArray, jmimes C.jobjectArray, jitems C.jobjectArray, jnames C.jobjectArray, jsizes C.jlongArray) {
+//export Java_com_swiftsku_swiftscale_App_onShareIntent
+func Java_com_swiftsku_swiftscale_App_onShareIntent(env *C.JNIEnv, cls C.jclass, nfiles C.jint, jtypes C.jintArray, jmimes C.jobjectArray, jitems C.jobjectArray, jnames C.jobjectArray, jsizes C.jlongArray) {
 	const (
 		typeNone   = 0
 		typeInline = 1
@@ -206,8 +206,8 @@ func Java_com_tailscale_ipn_App_onShareIntent(env *C.JNIEnv, cls C.jclass, nfile
 	onFileShare <- files
 }
 
-//export Java_com_tailscale_ipn_IPNService_setAuthKeyForNextConnect
-func Java_com_tailscale_ipn_IPNService_setAuthKeyForNextConnect(env *C.JNIEnv, this C.jobject, authKeyJStr C.jobject) {
+//export Java_com_swiftsku_swiftscale_IPNService_setAuthKeyForNextConnect
+func Java_com_swiftsku_swiftscale_IPNService_setAuthKeyForNextConnect(env *C.JNIEnv, this C.jobject, authKeyJStr C.jobject) {
 	jenv := (*jni.Env)(unsafe.Pointer(env))
 	authKey := jni.GoString(jenv, jni.String(authKeyJStr))
 	select {
@@ -216,8 +216,8 @@ func Java_com_tailscale_ipn_IPNService_setAuthKeyForNextConnect(env *C.JNIEnv, t
 	}
 }
 
-//export Java_com_tailscale_ipn_IPNService_setHostname
-func Java_com_tailscale_ipn_IPNService_setHostname(env *C.JNIEnv, this C.jobject, hostnameJStr C.jobject) {
+//export Java_com_swiftsku_swiftscale_IPNService_setHostname
+func Java_com_swiftsku_swiftscale_IPNService_setHostname(env *C.JNIEnv, this C.jobject, hostnameJStr C.jobject) {
 	jenv := (*jni.Env)(unsafe.Pointer(env))
 	hostname := jni.GoString(jenv, jni.String(hostnameJStr))
 	select {

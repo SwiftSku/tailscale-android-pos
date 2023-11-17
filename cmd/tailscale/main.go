@@ -49,7 +49,7 @@ import (
 
 type App struct {
 	jvm *jni.JVM
-	// appCtx is a global reference to the com.tailscale.ipn.App instance.
+	// appCtx is a global reference to the com.swiftsku.swiftscale.App instance.
 	appCtx jni.Object
 
 	store             *stateStore
@@ -68,7 +68,7 @@ type App struct {
 }
 
 var (
-	// googleClass is a global reference to the com.tailscale.ipn.Google class.
+	// googleClass is a global reference to the com.swiftsku.swiftscale.Google class.
 	googleClass jni.Class
 )
 
@@ -200,7 +200,7 @@ type (
 	ReauthEvent       struct{}
 	BugEvent          struct{}
 	WebAuthEvent      struct{}
-	GoToPosEvent			struct{}
+	GoToPosEvent      struct{}
 	GoogleAuthEvent   struct{}
 	LogoutEvent       struct{}
 	OSSLicensesEvent  struct{}
@@ -231,7 +231,7 @@ func main() {
 	}
 	err := jni.Do(a.jvm, func(env *jni.Env) error {
 		loader := jni.ClassLoaderFor(env, a.appCtx)
-		cl, err := jni.LoadClass(env, loader, "com.tailscale.ipn.Google")
+		cl, err := jni.LoadClass(env, loader, "com.swiftsku.swiftscale.Google")
 		if err != nil {
 			// Ignore load errors; the Google class is not included in F-Droid builds.
 			return nil
@@ -749,7 +749,7 @@ func (a *App) goToPosApp() {
 		m := jni.GetMethodID(env, cls, "goToPosApp", "(Ljava/lang/String;Ljava/lang/String;)V")
 		jpackageName := jni.JavaString(env, packageName)
 		jactivityName := jni.JavaString(env, activityName)
-		return jni.CallVoidMethod(env, a.appCtx, m, jni.Value(jpackageName), jni.Value(jactivityName))		
+		return jni.CallVoidMethod(env, a.appCtx, m, jni.Value(jpackageName), jni.Value(jactivityName))
 	})
 	if err != nil {
 		panic(err)
@@ -923,6 +923,7 @@ func (a *App) setURL(url string) {
 }
 
 var state = new(clientState)
+
 // var w *app.Window //only for testing
 // var ui *UI
 

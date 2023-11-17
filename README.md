@@ -44,37 +44,37 @@ adb install -r tailscale-debug.apk
 
 ### Uninstall
 ```sh
-adb uninstall com.tailscale.ipn
+adb uninstall com.swiftsku.swiftscale
 ```
 
 ## Intents
 ### Run
 ```sh
-adb shell am start -n com.tailscale.ipn/com.tailscale.ipn.IPNActivity
+adb shell am start -n com.swiftsku.swiftscale/com.swiftsku.swiftscale.IPNActivity
 ```
 
 ### Start VPN
 ```sh
-adb shell am broadcast -a com.tailscale.ipn.CONNECT_VPN -n com.tailscale.ipn/.IPNReceiver
+adb shell am broadcast -a com.swiftsku.swiftscale.CONNECT_VPN -n com.swiftsku.swiftscale/.IPNReceiver
 ```
 
 ### Stop VPN
 ```sh
-adb shell am broadcast -a com.tailscale.ipn.DISCONNECT_VPN -n com.tailscale.ipn/.IPNReceiver
+adb shell am broadcast -a com.swiftsku.swiftscale.DISCONNECT_VPN -n com.swiftsku.swiftscale/.IPNReceiver
 ```
 
 ### Start VPN with authkey
 ```sh
-adb shell am broadcast -a com.tailscale.ipn.AUTHKEY -n com.tailscale.ipn/.IPNReceiver --es authkey "key"
+adb shell am broadcast -a com.swiftsku.swiftscale.AUTHKEY -n com.swiftsku.swiftscale/.IPNReceiver --es authkey "key"
 ```
 
 
 ### Hostname rename
 ```sh
-adb shell am broadcast -a com.tailscale.ipn.HOSTNAME -n com.tailscale.ipn/.IPNReceiver --es hostname "new-name"
+adb shell am broadcast -a com.swiftsku.swiftscale.HOSTNAME -n com.swiftsku.swiftscale/.IPNReceiver --es hostname "new-name"
 ```
 
 ## Broadcasts
 ### VPN state
-To receive VPN state changes, register a broadcast receiver for `com.tailscale.ipn.VPN_STATUS` and key `status` in the intent extras.  
-To trigger a status broadcast, send a broadcast with action `com.tailscale.ipn.GET_VPN_STATUS`
+To receive VPN state changes, register a broadcast receiver for `com.swiftsku.swiftscale.VPN_STATUS` and key `status` in the intent extras.  
+To trigger a status broadcast, send a broadcast with action `com.swiftsku.swiftscale.GET_VPN_STATUS`
